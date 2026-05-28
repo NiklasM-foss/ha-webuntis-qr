@@ -5,6 +5,8 @@ sodass mehrere Entities (Sensor, Calendar) sich denselben Datensatz teilen.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
@@ -46,6 +48,9 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._entry = entry
         # Wird im ersten Refresh gefüllt – kompletter User+MasterData-Block
         self._user_data: dict[str, Any] | None = None
+        # Fingerprint des letzten Stundenplan-Snapshots – für „Änderungen
+        # seit letzter Aktualisierung"-Binary-Sensor
+        self._last_fingerprint: str | None = None
 
     @property
     def lookahead_days(self) -> int:
@@ -77,9 +82,23 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 end=today + timedelta(days=self.lookahead_days),
             )
 
+            enriched = _enrich_periods(periods, self._user_data)
+
+            # Fingerprint berechnen und mit dem letzten vergleichen, um zu
+            # erkennen ob sich der Stundenplan zwischen zwei Refreshes
+            # geändert hat (Ausfall, Vertretung, neue Stunde …).
+            fingerprint = _periods_fingerprint(enriched)
+            changed = (
+                self._last_fingerprint is not None
+                and fingerprint != self._last_fingerprint
+            )
+            self._last_fingerprint = fingerprint
+
             return {
                 "user_data": self._user_data,
-                "periods": _enrich_periods(periods, self._user_data),
+                "periods": enriched,
+                "changed_since_last": changed,
+                "fingerprint": fingerprint,
             }
         except WebUntisAuthError as err:
             # Cached userData wegwerfen, damit nächster Versuch neu authentifiziert
@@ -145,6 +164,31 @@ def _enrich_periods(
 
     enriched.sort(key=lambda x: x["start"])
     return enriched
+
+
+def _periods_fingerprint(periods: list[dict[str, Any]]) -> str:
+    """
+    Erzeugt einen stabilen Hash über die relevanten Felder aller Periods.
+
+    Wird genutzt, um „echte" Stundenplan-Änderungen (Ausfall, Vertretung,
+    Raumwechsel, …) gegen bloße Re-Fetches ohne inhaltliche Änderung zu
+    unterscheiden.
+    """
+    # Periods sind bereits zeitlich sortiert; nur identifizierende Felder
+    # in den Hash aufnehmen, damit Anzeige-Reihenfolge nichts kaputt macht.
+    compact = [
+        {
+            "s": p["start"].isoformat(),
+            "e": p["end"].isoformat(),
+            "su": p.get("subject", ""),
+            "r": p.get("room", ""),
+            "t": p.get("teacher", ""),
+            "c": bool(p.get("is_cancelled")),
+        }
+        for p in periods
+    ]
+    blob = json.dumps(compact, sort_keys=True, ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(blob).hexdigest()
 
 
 def _parse_iso(value: str) -> datetime:

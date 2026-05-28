@@ -29,4 +29,4 @@ MIN_LOOKAHEAD_DAYS = 1
 MAX_LOOKAHEAD_DAYS = 60
 
 # Plattformen, die diese Integration registriert
-PLATFORMS = ["sensor", "calendar"]
+PLATFORMS = ["sensor", "binary_sensor", "calendar"]

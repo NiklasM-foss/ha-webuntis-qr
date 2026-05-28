@@ -110,6 +110,9 @@ action:
 
 ## Letzte Änderungen
 
+- 1.2.0 – Binary-Sensor „Änderungen seit letzter Aktualisierung" hinzugefügt
+  (SHA-256-Fingerprint über Periods – wird für einen Refresh-Zyklus true
+  wenn sich Stundenplan-Inhalte geändert haben, danach automatisch false).
 - 1.1.0 – Options-Flow: Aktualisierungsintervall (60–3600 s, Default 300 s)
   und Lookahead-Zeitraum (1–60 Tage, Default 7) im UI einstellbar
   (*Integration → Konfigurieren*). Reload erfolgt automatisch.
