@@ -1,0 +1,18 @@
+{
+  "entity": {
+    "sensor": {
+      "next_lesson": { "default": "mdi:school" },
+      "current_lesson": { "default": "mdi:clock-outline" },
+      "lessons_today": { "default": "mdi:calendar-today" }
+    },
+    "binary_sensor": {
+      "changed_since_last": {
+        "default": "mdi:bell-outline",
+        "state": { "on": "mdi:bell-alert" }
+      }
+    },
+    "calendar": {
+      "timetable": { "default": "mdi:calendar-clock" }
+    }
+  }
+}

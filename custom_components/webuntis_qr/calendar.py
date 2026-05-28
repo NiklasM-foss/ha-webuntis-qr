@@ -33,7 +33,7 @@ class WebUntisCalendar(CoordinatorEntity[WebUntisCoordinator], CalendarEntity):
     """Ein Kalender pro Konto – enthält alle Periods der nächsten 7 Tage."""
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:calendar-clock"
+    _attr_translation_key = "timetable"
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator)

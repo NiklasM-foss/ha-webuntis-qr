@@ -110,6 +110,10 @@ action:
 
 ## Letzte Änderungen
 
+- 1.3.0 – Eigenes Projekt-Icon (`brand/icon.svg`, Doktorhut + QR-Marker) +
+  `icons.json` für Entity-Icons (HA-Translation-Mechanismus, dynamisches
+  Glocken-Icon beim Änderungs-Sensor on/off). Brands-Repo-Anleitung in
+  `brand/README.md`.
 - 1.2.1 – Raum erscheint jetzt im Kalender-Titel (Format „Fach • Raum"),
   zusätzlich weiterhin in `location` und Beschreibung.
 - 1.2.0 – Binary-Sensor „Änderungen seit letzter Aktualisierung" hinzugefügt

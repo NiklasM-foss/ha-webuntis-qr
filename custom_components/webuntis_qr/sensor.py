@@ -62,7 +62,6 @@ class NextLessonSensor(_Base):
     """Zeigt die nächste anstehende (nicht ausgefallene) Stunde."""
 
     _attr_translation_key = "next_lesson"
-    _attr_icon = "mdi:school"
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "next_lesson")
@@ -104,7 +103,6 @@ class CurrentLessonSensor(_Base):
     """Stunde, die JETZT gerade läuft – sonst 'frei'."""
 
     _attr_translation_key = "current_lesson"
-    _attr_icon = "mdi:clock-outline"
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "current_lesson")
@@ -146,7 +144,6 @@ class LessonsTodaySensor(_Base):
     """Anzahl der heutigen Stunden (Ausfälle exklusive)."""
 
     _attr_translation_key = "lessons_today"
-    _attr_icon = "mdi:calendar-today"
     _attr_native_unit_of_measurement = "Stunden"
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:

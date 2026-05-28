@@ -39,7 +39,7 @@ class ChangedSinceLastSensor(
     """
 
     _attr_has_entity_name = True
-    _attr_icon = "mdi:bell-alert"
+    _attr_translation_key = "changed_since_last"
 
     def __init__(
         self, coordinator: WebUntisCoordinator, entry: ConfigEntry
