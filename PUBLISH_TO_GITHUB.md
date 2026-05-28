@@ -11,43 +11,24 @@ Diese Datei ist nur für dich – nach erfolgreichem Publish bitte löschen.
    - **Name:** `ha-webuntis-qr`
    - **Description:** `HACS-kompatible Home Assistant Integration für WebUntis mit QR-Code-Login (TOTP)`
    - **Keep this code private:** ❌ AUS (Public)
-   - Owner: dein User
+   - Owner: `NiklasM-foss`
 5. **Publish repository**
 
-## 2. Tag mit hochpushen
+## 2. Tag v1.0.0 mit hochpushen
 
-GitHub Desktop pusht Tags nicht automatisch. Entweder:
-
-- **GitHub Desktop:** Menüleiste → **Repository → Push** (Tags werden mitgenommen wenn beim Pushen "include tags" auftaucht), oder
-- **Im Terminal** (in diesem Ordner):
-  ```
-  git push origin v1.0.0
-  ```
-
-## 3. Username im Code ersetzen
-
-In zwei Dateien stehen Platzhalter `YOUR-GITHUB-USERNAME`:
-
-- `custom_components/webuntis_qr/manifest.json` (documentation, issue_tracker, codeowners)
-- `README.md` (HACS-URL)
-
-Such-und-Ersetzen über die ganzen Files (z.B. in VS Code: Strg+Shift+H):
+GitHub Desktop pusht Tags nicht automatisch. Im Terminal (in diesem Ordner):
 ```
-YOUR-GITHUB-USERNAME  →  <dein GitHub-User>
+git push origin v1.0.0
 ```
-Danach in GitHub Desktop committen + pushen.
 
-## 4. Repo-Settings auf github.com
+## 3. Repo-Settings auf github.com
 
-Im neu erstellten Repo:
+Repo öffnen → **About** (Zahnrad rechts oben) → **Topics** setzen:
+```
+home-assistant  hacs  hacs-integration  webuntis  untis  qr-login  home-assistant-integration
+```
 
-- **About** (Zahnrad rechts oben) → **Topics** setzen:
-  ```
-  home-assistant  hacs  hacs-integration  webuntis  untis  qr-login  home-assistant-integration
-  ```
-  (HACS findet das Repo über diese Topics besser; siehe HACS-Doku.)
-
-## 5. GitHub Release erstellen
+## 4. GitHub Release erstellen
 
 HACS braucht ein **Release**, nicht nur einen Tag.
 
@@ -65,9 +46,9 @@ HACS braucht ein **Release**, nicht nur einen Tag.
   ```
 - **Publish release**
 
-## 6. Aufräumen
+## 5. Aufräumen
 
-- Diese Datei (`PUBLISH_TO_GITHUB.md`) löschen + committen.
+- Diese Datei (`PUBLISH_TO_GITHUB.md`) löschen, committen, pushen.
 
 ## Optional: Gitea-Mirror weiter pflegen
 

@@ -57,7 +57,7 @@ untis://setschool?url=<server>&school=<schulname>&user=<username>&key=<base32-se
 ### Via HACS (empfohlen)
 
 1. HACS → Drei-Punkte-Menü → **Benutzerdefinierte Repositories**
-2. URL `https://github.com/YOUR-GITHUB-USERNAME/ha-webuntis-qr` eintragen,
+2. URL `https://github.com/NiklasM-foss/ha-webuntis-qr` eintragen,
    Kategorie *Integration*
 3. „WebUntis (QR-Login)" installieren, Home Assistant neu starten
 4. *Einstellungen → Geräte & Dienste → Integration hinzufügen → WebUntis (QR-Login)*
