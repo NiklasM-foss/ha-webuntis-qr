@@ -9,11 +9,18 @@ import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import WebUntisAuthError, WebUntisQRClient
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    CONF_LOOKAHEAD_DAYS,
+    CONF_SCAN_INTERVAL,
+    DEFAULT_LOOKAHEAD_DAYS,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -24,16 +31,28 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     und stellt das masterData-Mapping (Fächer/Räume/Lehrer-IDs → Namen) bereit.
     """
 
-    def __init__(self, hass: HomeAssistant, client: WebUntisQRClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, client: WebUntisQRClient
+    ) -> None:
+        # Optionen aus dem Options-Flow lesen (Fallback auf Defaults)
+        scan = int(entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL))
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{client.credentials.user}",
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=scan),
         )
         self.client = client
+        self._entry = entry
         # Wird im ersten Refresh gefüllt – kompletter User+MasterData-Block
         self._user_data: dict[str, Any] | None = None
+
+    @property
+    def lookahead_days(self) -> int:
+        """Wie viele Tage Stundenplan ab heute geladen werden."""
+        return int(
+            self._entry.options.get(CONF_LOOKAHEAD_DAYS, DEFAULT_LOOKAHEAD_DAYS)
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Wird vom Coordinator periodisch aufgerufen."""
@@ -55,7 +74,7 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 elem_id=elem_id,
                 elem_type=elem_type,
                 start=today,
-                end=today + timedelta(days=7),
+                end=today + timedelta(days=self.lookahead_days),
             )
 
             return {

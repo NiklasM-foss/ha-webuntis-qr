@@ -110,6 +110,9 @@ action:
 
 ## Letzte Änderungen
 
+- 1.1.0 – Options-Flow: Aktualisierungsintervall (60–3600 s, Default 300 s)
+  und Lookahead-Zeitraum (1–60 Tage, Default 7) im UI einstellbar
+  (*Integration → Konfigurieren*). Reload erfolgt automatisch.
 - 1.0.2 – Period-Parsing korrigiert: `startDateTime`/`endDateTime` sind
   ISO-Strings („2026-05-28T11:10Z"), nicht Integer. `is` ist eine Liste
   („CANCELLED" als Tag), nicht ein Dict. Datetimes jetzt timezone-aware.

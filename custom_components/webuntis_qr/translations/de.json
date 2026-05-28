@@ -35,6 +35,18 @@
       "already_configured": "Bereits eingerichtet."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WebUntis-Optionen",
+        "description": "Polling-Intervall und Vorausschau-Zeitraum anpassen.",
+        "data": {
+          "scan_interval": "Aktualisierungsintervall (Sekunden, 60–3600)",
+          "lookahead_days": "Stundenplan im Voraus (Tage, 1–60)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "next_lesson": { "name": "Nächste Stunde" },

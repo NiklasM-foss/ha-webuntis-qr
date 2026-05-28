@@ -35,6 +35,18 @@
       "already_configured": "This account is already configured."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WebUntis options",
+        "description": "Adjust polling interval and lookahead window.",
+        "data": {
+          "scan_interval": "Update interval (seconds, 60–3600)",
+          "lookahead_days": "Lookahead (days, 1–60)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "next_lesson": { "name": "Next lesson" },

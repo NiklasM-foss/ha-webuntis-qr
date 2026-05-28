@@ -17,6 +17,7 @@ from typing import Any
 
 import voluptuous as vol
 from homeassistant import config_entries
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import (
@@ -27,11 +28,19 @@ from .api import (
 )
 from .const import (
     CONF_KEY,
+    CONF_LOOKAHEAD_DAYS,
+    CONF_SCAN_INTERVAL,
     CONF_SCHOOL,
     CONF_SCHOOL_NUMBER,
     CONF_SERVER,
     CONF_USER,
+    DEFAULT_LOOKAHEAD_DAYS,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    MAX_LOOKAHEAD_DAYS,
+    MAX_SCAN_INTERVAL,
+    MIN_LOOKAHEAD_DAYS,
+    MIN_SCAN_INTERVAL,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,6 +64,14 @@ class WebUntisQRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Erstellt einen neuen ConfigEntry für ein WebUntis-Konto."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> "WebUntisOptionsFlow":
+        """Hooks HA an, damit der „Konfigurieren"-Button im UI erscheint."""
+        return WebUntisOptionsFlow(config_entry)
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -155,4 +172,49 @@ class WebUntisQRConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_KEY: creds.key,
                 CONF_SCHOOL_NUMBER: creds.school_number,
             },
+            options={
+                # Defaults beim Anlegen direkt setzen, damit der User sie
+                # im UI hochzählen / senken kann.
+                CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
+                CONF_LOOKAHEAD_DAYS: DEFAULT_LOOKAHEAD_DAYS,
+            },
         )
+
+
+class WebUntisOptionsFlow(config_entries.OptionsFlow):
+    """
+    Options-Dialog: erlaubt das Ändern von Polling-Intervall und Lookahead-Tagen
+    nachdem die Integration eingerichtet ist – ohne Re-Auth / QR-Code-Re-Scan.
+    """
+
+    def __init__(self, entry: config_entries.ConfigEntry) -> None:
+        self._entry = entry
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.FlowResult:
+        if user_input is not None:
+            # Werte sind durch das Schema bereits geclamped/validiert
+            return self.async_create_entry(title="", data=user_input)
+
+        # Aktuelle Werte als Vorbelegung (entweder Options oder Default)
+        current_scan = self._entry.options.get(
+            CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
+        )
+        current_lookahead = self._entry.options.get(
+            CONF_LOOKAHEAD_DAYS, DEFAULT_LOOKAHEAD_DAYS
+        )
+
+        schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_SCAN_INTERVAL, default=current_scan
+                ): vol.All(int, vol.Range(min=MIN_SCAN_INTERVAL, max=MAX_SCAN_INTERVAL)),
+                vol.Required(
+                    CONF_LOOKAHEAD_DAYS, default=current_lookahead
+                ): vol.All(
+                    int, vol.Range(min=MIN_LOOKAHEAD_DAYS, max=MAX_LOOKAHEAD_DAYS)
+                ),
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)

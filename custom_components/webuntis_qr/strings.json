@@ -35,6 +35,18 @@
       "already_configured": "Dieses WebUntis-Konto ist bereits eingerichtet."
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "WebUntis-Optionen",
+        "description": "Hier kannst du Polling-Intervall und Vorausschau-Zeitraum anpassen. Niedrigeres Intervall = aktuellere Daten, mehr Last auf dem Schul-Server.",
+        "data": {
+          "scan_interval": "Aktualisierungsintervall (Sekunden, 60–3600)",
+          "lookahead_days": "Stundenplan im Voraus laden (Tage, 1–60)"
+        }
+      }
+    }
+  },
   "entity": {
     "sensor": {
       "next_lesson": { "name": "Nächste Stunde" },

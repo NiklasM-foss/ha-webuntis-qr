@@ -1,7 +1,7 @@
 {
   "domain": "webuntis_qr",
   "name": "WebUntis (QR-Login)",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "documentation": "https://github.com/NiklasM-foss/ha-webuntis-qr",
   "issue_tracker": "https://github.com/NiklasM-foss/ha-webuntis-qr/issues",
   "codeowners": ["@NiklasM-foss"],

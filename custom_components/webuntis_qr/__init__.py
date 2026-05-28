@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     session = async_get_clientsession(hass)
     client = WebUntisQRClient(creds, session)
-    coordinator = WebUntisCoordinator(hass, client)
+    coordinator = WebUntisCoordinator(hass, entry, client)
 
     # Erstes Laden synchron abwarten – schlägt das fehl, scheitert das Setup
     await coordinator.async_config_entry_first_refresh()
@@ -49,9 +49,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Coordinator unter der Entry-ID ablegen, damit Sensor/Calendar drankommen
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    # Reload, wenn der User die Options ändert (Intervall / Lookahead)
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+
     # Plattformen registrieren
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload der Integration, sobald Options geändert wurden."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
