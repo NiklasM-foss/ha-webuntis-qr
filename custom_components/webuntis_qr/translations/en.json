@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add WebUntis",
+        "description": "Choose a login method.",
+        "menu_options": {
+          "qr": "Paste QR code content",
+          "manual": "Manual (server / school / user / key)"
+        }
+      },
+      "qr": {
+        "title": "Paste QR code content",
+        "description": "In the Untis app: Profile → Sharing → Access via mobile device. Scan the QR with a phone (e.g. camera app) and paste the decoded text here.",
+        "data": {
+          "qr_payload": "QR content (untis://setschool?...)"
+        }
+      },
+      "manual": {
+        "title": "Manual entry",
+        "data": {
+          "server": "Server",
+          "school": "School name",
+          "user": "Username",
+          "key": "Key (Base32 TOTP secret)",
+          "schoolNumber": "School number"
+        }
+      }
+    },
+    "error": {
+      "invalid_qr": "Invalid QR payload – expected 'untis://setschool?...'.",
+      "auth_failed": "Login failed."
+    },
+    "abort": {
+      "already_configured": "This account is already configured."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_lesson": { "name": "Next lesson" },
+      "current_lesson": { "name": "Current lesson" },
+      "lessons_today": { "name": "Lessons today" }
+    }
+  }
+}

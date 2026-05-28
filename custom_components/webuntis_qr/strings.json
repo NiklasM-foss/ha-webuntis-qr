@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "WebUntis hinzufügen",
+        "description": "Wähle eine Anmeldemethode.",
+        "menu_options": {
+          "qr": "QR-Code-Text einfügen",
+          "manual": "Manuell (Server / Schule / User / Key)"
+        }
+      },
+      "qr": {
+        "title": "QR-Code-Inhalt einfügen",
+        "description": "Öffne in der Untis-App: Profil → Freigaben → Zugang über Smartphone, scanne den QR-Code mit deinem Telefon (z. B. mit der Kamera) und füge den dekodierten Text hier ein. Beispiel: {example}",
+        "data": {
+          "qr_payload": "QR-Inhalt (untis://setschool?...)"
+        }
+      },
+      "manual": {
+        "title": "Manuelle Eingabe",
+        "data": {
+          "server": "Server (z. B. ajax.webuntis.com)",
+          "school": "Schulname (intern)",
+          "user": "Benutzername",
+          "key": "Schlüssel (TOTP-Secret, Base32)",
+          "schoolNumber": "Schulnummer (optional)"
+        }
+      }
+    },
+    "error": {
+      "invalid_qr": "QR-Inhalt konnte nicht gelesen werden – erwartet wird eine 'untis://setschool?...' URI.",
+      "auth_failed": "Anmeldung bei WebUntis fehlgeschlagen. Bitte Eingaben prüfen."
+    },
+    "abort": {
+      "already_configured": "Dieses WebUntis-Konto ist bereits eingerichtet."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "next_lesson": { "name": "Nächste Stunde" },
+      "current_lesson": { "name": "Aktuelle Stunde" },
+      "lessons_today": { "name": "Stunden heute" }
+    }
+  }
+}
