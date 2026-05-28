@@ -27,8 +27,12 @@ import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
-# User-Agent: WebUntis blockt teilweise Default-Python-UAs
-USER_AGENT = "HomeAssistant-WebUntisQR/0.1"
+# User-Agent: Untis-Server filtern Default-Python-UAs; wir geben uns als
+# Mobile-Client aus, das matcht den offiziellen App-Flow.
+USER_AGENT = "UntisMobileAndroid"
+
+# API-Versions-Marker, den die Untis-Mobile-App auch mitschickt
+API_VERSION = "i3.2"
 
 
 @dataclass
@@ -111,10 +115,15 @@ class WebUntisQRClient:
         return self._creds
 
     def _endpoint(self, method: str) -> str:
-        """Baut die JSON-RPC-URL für eine bestimmte Methode."""
+        """
+        Baut die JSON-RPC-URL für eine bestimmte Methode.
+
+        Wichtig: `v=i3.2` ist Pflicht – ohne den Versions-Parameter werfen
+        manche Untis-Server zwar HTTP 200, aber "Method not found".
+        """
         return (
             f"https://{self._creds.server}/WebUntis/jsonrpc_intern.do"
-            f"?m={method}&school={self._creds.school}"
+            f"?m={method}&school={self._creds.school}&v={API_VERSION}"
         )
 
     def _auth_block(self) -> dict[str, Any]:
@@ -134,11 +143,16 @@ class WebUntisQRClient:
         }
 
     async def _rpc(self, method: str, params: dict[str, Any]) -> dict[str, Any]:
-        """Führt einen einzelnen JSON-RPC-Call aus und liefert das `result`."""
+        """
+        Führt einen einzelnen JSON-RPC-Call aus und liefert das `result`.
+
+        Untis-Eigenheit: `params` MUSS als einelementiges Array gesendet
+        werden, sonst antwortet der Server mit "Invalid method parameters".
+        """
         body = {
             "id": "ha-webuntis-qr",
             "method": method,
-            "params": params,
+            "params": [params],
             "jsonrpc": "2.0",
         }
         headers = {
@@ -179,21 +193,22 @@ class WebUntisQRClient:
 
     async def async_get_timetable(
         self,
-        person_id: int,
+        elem_id: int,
+        elem_type: str,
         start: date,
         end: date,
     ) -> list[dict[str, Any]]:
         """
-        Holt den Stundenplan einer Person für einen Datumsbereich.
+        Holt den Stundenplan eines Untis-Elements (Schüler/Lehrer/Klasse).
 
-        Datumsformat WebUntis: YYYYMMDD als Integer.
-        Liefert eine Liste von Periods (Einzelstunden) mit Start-/Endzeit,
-        Fach, Raum, Lehrer und Status (Ausfall, Vertretung, …).
+        Untis-Eigenheit: `type` ist hier ein STRING wie "STUDENT" / "TEACHER" /
+        "CLASS" – nicht der numerische ElementType-Code aus den älteren APIs.
+        Datumsformat: YYYYMMDD als Integer.
         """
         params = {
             "auth": self._auth_block(),
-            "id": person_id,
-            "type": 5,  # 5 = STUDENT, 2 = TEACHER
+            "id": elem_id,
+            "type": elem_type,
             "startDate": int(start.strftime("%Y%m%d")),
             "endDate": int(end.strftime("%Y%m%d")),
             "masterDataTimestamp": 0,

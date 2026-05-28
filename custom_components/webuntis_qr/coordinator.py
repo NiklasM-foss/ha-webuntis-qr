@@ -42,13 +42,18 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self._user_data is None:
                 self._user_data = await self.client.async_get_user_data()
 
-            person_id = self._user_data.get("userData", {}).get("personId")
-            if not person_id:
-                raise UpdateFailed("Keine personId in userData – Login kaputt?")
+            # Die Mobile-API gibt das ID-Element als `elemId`/`elemType` zurück,
+            # nicht als `personId` (das war die alte Public-API).
+            user = self._user_data.get("userData", {})
+            elem_id = user.get("elemId") or user.get("personId")
+            elem_type = user.get("elemType") or "STUDENT"
+            if not elem_id:
+                raise UpdateFailed("Keine elemId in userData – Login kaputt?")
 
             today = date.today()
             periods = await self.client.async_get_timetable(
-                person_id=person_id,
+                elem_id=elem_id,
+                elem_type=elem_type,
                 start=today,
                 end=today + timedelta(days=7),
             )

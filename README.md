@@ -110,6 +110,9 @@ action:
 
 ## Letzte Änderungen
 
+- 1.0.1 – Fix gegen echten Untis-Server: `params` als Array, `v=i3.2` im
+  Endpoint, `type` als String ("STUDENT"), Lesen von `elemId`/`elemType`
+  aus `userData` (statt `personId`). Verifiziert gegen bk-luebbecke.
 - 1.0.0 – Initiale Release: QR-Login, TOTP-Auth, Sensoren + Kalender,
   eigener async JSON-RPC-Client (kein `python-webuntis`).
 
