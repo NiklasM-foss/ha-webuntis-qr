@@ -54,15 +54,47 @@ untis://setschool?url=<server>&school=<schulname>&user=<username>&key=<base32-se
 
 ## Installation
 
-### Via HACS (empfohlen)
+> **Hinweis:** HACS kommuniziert ausschließlich mit der GitHub-API – ein
+> selbst gehosteter Gitea-Server (wie dieser hier) lässt sich **nicht** als
+> Custom Repository in HACS eintragen. Solange das Repo nur auf Gitea liegt,
+> bitte manuell installieren. Wird das Repo später nach GitHub gespiegelt,
+> wird es HACS-fähig (`hacs.json` + `manifest.json` sind bereits konform).
 
-1. HACS → Integrationen → Drei-Punkte-Menü → **Benutzerdefinierte Repositories**
-2. URL dieses Repos eintragen, Kategorie *Integration*
-3. „WebUntis (QR-Login)" installieren, HA neu starten
+### Manuell (Standardweg auf diesem Setup)
 
-### Manuell
+1. Inhalt von `custom_components/webuntis_qr/` ins HA-Configdir kopieren:
+   ```
+   <ha-config>/custom_components/webuntis_qr/
+   ```
+   Beispiel via `pscp` (Windows → HA-Host):
+   ```
+   pscp -pw <pw> -r custom_components/webuntis_qr root@<ha-host>:/config/custom_components/
+   ```
+2. Home Assistant neu starten.
+3. *Einstellungen → Geräte & Dienste → Integration hinzufügen → WebUntis (QR-Login)*.
 
-`custom_components/webuntis_qr/` ins HA-Configdir kopieren, HA neu starten.
+### Via HACS (nur wenn auf GitHub gespiegelt)
+
+Wenn das Repo zusätzlich auf GitHub veröffentlicht wurde:
+
+1. HACS → Drei-Punkte-Menü → **Benutzerdefinierte Repositories**
+2. GitHub-URL eintragen, Kategorie *Integration*
+3. Installieren, HA neu starten.
+
+### HACS-Konformität (für späteren GitHub-Push)
+
+Bereits erfüllt:
+- `hacs.json` mit `name`, `homeassistant`, `country`, `render_readme`
+- `manifest.json` mit `domain`, `documentation`, `issue_tracker`, `codeowners`,
+  `name`, `version`, `config_flow`, `iot_class`, `requirements`
+- README mit Doku
+
+Beim GitHub-Push noch zu tun:
+- Repo-**Description** setzen
+- **Topics** setzen: `home-assistant`, `hacs`, `hacs-integration`,
+  `webuntis`, `untis`, `qr-login`, `home-assistant-integration`
+- **Release** (nicht nur Tag) für jede Version anlegen – HACS nutzt den
+  Release-Tag-Namen als Versions-String.
 
 ## Einrichtung
 
