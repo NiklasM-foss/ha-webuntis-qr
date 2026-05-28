@@ -110,6 +110,9 @@ action:
 
 ## Letzte Änderungen
 
+- 1.0.2 – Period-Parsing korrigiert: `startDateTime`/`endDateTime` sind
+  ISO-Strings („2026-05-28T11:10Z"), nicht Integer. `is` ist eine Liste
+  („CANCELLED" als Tag), nicht ein Dict. Datetimes jetzt timezone-aware.
 - 1.0.1 – Fix gegen echten Untis-Server: `params` als Array, `v=i3.2` im
   Endpoint, `type` als String ("STUDENT"), Lesen von `elemId`/`elemType`
   aus `userData` (statt `personId`). Verifiziert gegen bk-luebbecke.

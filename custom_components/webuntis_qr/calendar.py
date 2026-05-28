@@ -7,7 +7,7 @@ Damit lassen sich Lovelace-Calendar-Cards, Automationen
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -53,7 +53,8 @@ class WebUntisCalendar(CoordinatorEntity[WebUntisCoordinator], CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Nächstes anstehendes Event – wird in der HA-UI hervorgehoben."""
-        now = datetime.now()
+        # Periods sind timezone-aware (UTC); now() entsprechend aware machen
+        now = datetime.now(timezone.utc)
         upcoming = next(
             (p for p in self._periods() if p["end"] > now and not p["is_cancelled"]),
             None,
@@ -69,14 +70,11 @@ class WebUntisCalendar(CoordinatorEntity[WebUntisCoordinator], CalendarEntity):
         end_date: datetime,
     ) -> list[CalendarEvent]:
         """Liefert alle Periods im gefragten Zeitfenster."""
-        # WebUntis-Datetimes sind naiv (lokale Zeit); HA übergibt aware datetimes
-        start_naive = start_date.replace(tzinfo=None) if start_date.tzinfo else start_date
-        end_naive = end_date.replace(tzinfo=None) if end_date.tzinfo else end_date
-
+        # Periods und HA-Range sind beide aware – direkter Vergleich
         return [
             _to_event(p)
             for p in self._periods()
-            if p["end"] >= start_naive and p["start"] <= end_naive
+            if p["end"] >= start_date and p["start"] <= end_date
         ]
 
 

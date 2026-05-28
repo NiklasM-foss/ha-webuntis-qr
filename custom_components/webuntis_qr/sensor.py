@@ -7,7 +7,7 @@ Jeder Sensor ist eine dünne Sicht auf die im Coordinator gecachten Periods.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
@@ -70,7 +70,8 @@ class NextLessonSensor(_Base):
 
     @property
     def native_value(self) -> str | None:
-        now = datetime.now()
+        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        now = datetime.now(timezone.utc)
         # Erste Period, die in der Zukunft liegt und nicht ausgefallen ist
         upcoming = next(
             (p for p in self._periods() if p["end"] > now and not p["is_cancelled"]),
@@ -82,7 +83,8 @@ class NextLessonSensor(_Base):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        now = datetime.now()
+        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        now = datetime.now(timezone.utc)
         upcoming = next(
             (p for p in self._periods() if p["end"] > now and not p["is_cancelled"]),
             None,
@@ -110,7 +112,8 @@ class CurrentLessonSensor(_Base):
 
     @property
     def native_value(self) -> str:
-        now = datetime.now()
+        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        now = datetime.now(timezone.utc)
         current = next(
             (p for p in self._periods() if p["start"] <= now < p["end"]),
             None,
@@ -123,7 +126,8 @@ class CurrentLessonSensor(_Base):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        now = datetime.now()
+        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        now = datetime.now(timezone.utc)
         current = next(
             (p for p in self._periods() if p["start"] <= now < p["end"]),
             None,
@@ -151,17 +155,19 @@ class LessonsTodaySensor(_Base):
 
     @property
     def native_value(self) -> int:
-        today = datetime.now().date()
+        # date() in lokaler Zeit – Periods sind UTC, also vorher konvertieren
+        today = datetime.now().astimezone().date()
         return sum(
             1
             for p in self._periods()
-            if p["start"].date() == today and not p["is_cancelled"]
+            if p["start"].astimezone().date() == today and not p["is_cancelled"]
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        today = datetime.now().date()
-        todays = [p for p in self._periods() if p["start"].date() == today]
+        # date() in lokaler Zeit – Periods sind UTC, also vorher konvertieren
+        today = datetime.now().astimezone().date()
+        todays = [p for p in self._periods() if p["start"].astimezone().date() == today]
         if not todays:
             return None
         return {

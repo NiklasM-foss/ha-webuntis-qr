@@ -6,13 +6,13 @@ sodass mehrere Entities (Sensor, Calendar) sich denselben Datensatz teilen.
 from __future__ import annotations
 
 import logging
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, timezone
 from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import WebUntisAuthError, WebUntisQRClient, parse_period_datetime
+from .api import WebUntisAuthError, WebUntisQRClient
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,11 +74,12 @@ def _enrich_periods(
     periods: list[dict[str, Any]], user_data: dict[str, Any]
 ) -> list[dict[str, Any]]:
     """
-    Reichert Period-Einträge mit lesbaren Namen an.
+    Reichert Period-Einträge mit lesbaren Namen + geparsten Datumsangaben an.
 
-    WebUntis liefert in den Periods nur IDs für Fach/Raum/Lehrer; die
-    Klartextnamen stehen im `masterData`-Block. Wir mappen einmal und
-    hängen die fertigen Strings an jede Period.
+    Untis Mobile-API-Format (verifiziert gegen bk-luebbecke 2026-05):
+      - startDateTime / endDateTime: ISO-Strings, z.B. "2026-05-28T11:10Z"
+      - elements:  Liste mit type ∈ {CLASS,TEACHER,SUBJECT,ROOM}
+      - is:        Liste von Status-Tags, z.B. ["REGULAR"] oder ["CANCELLED"]
     """
     master = user_data.get("masterData", {})
     subjects = {s["id"]: s for s in master.get("subjects", [])}
@@ -87,12 +88,16 @@ def _enrich_periods(
 
     enriched: list[dict[str, Any]] = []
     for p in periods:
-        start_dt = parse_period_datetime(p["startDateTime"] // 10000, p["startDateTime"] % 10000) \
-            if "startDateTime" in p and isinstance(p["startDateTime"], int) and p["startDateTime"] > 10**8 \
-            else _legacy_period_datetime(p, "start")
-        end_dt = _legacy_period_datetime(p, "end") if not (
-            "endDateTime" in p and isinstance(p["endDateTime"], int) and p["endDateTime"] > 10**8
-        ) else parse_period_datetime(p["endDateTime"] // 10000, p["endDateTime"] % 10000)
+        try:
+            start_dt = _parse_iso(p.get("startDateTime"))
+            end_dt = _parse_iso(p.get("endDateTime"))
+        except (TypeError, ValueError):
+            # Period mit kaputtem Zeitstempel überspringen statt Crash
+            continue
+
+        # Status: "CANCELLED" steht direkt in der `is`-Liste
+        status = p.get("is", []) or []
+        is_cancelled = "CANCELLED" in status
 
         subject_ids = [e["id"] for e in p.get("elements", []) if e.get("type") == "SUBJECT"]
         room_ids = [e["id"] for e in p.get("elements", []) if e.get("type") == "ROOM"]
@@ -114,11 +119,8 @@ def _enrich_periods(
                 "teacher": ", ".join(
                     teachers[i]["name"] for i in teacher_ids if i in teachers
                 ),
-                # Status z.B. REGULAR, CANCELLED, IRREGULAR
-                "is_cancelled": p.get("is", {}).get("cancelled", False)
-                if isinstance(p.get("is"), dict)
-                else "CANCELLED" in (p.get("can", []) or []),
-                "raw": p,
+                "is_cancelled": is_cancelled,
+                "status": status,
             }
         )
 
@@ -126,14 +128,28 @@ def _enrich_periods(
     return enriched
 
 
-def _legacy_period_datetime(period: dict[str, Any], which: str) -> datetime:
+def _parse_iso(value: str) -> datetime:
     """
-    Fallback für ältere WebUntis-Server, die Datum und Zeit getrennt liefern:
-    `date` als YYYYMMDD und `startTime`/`endTime` als HHMM.
+    Parst die ISO-Zeitstempel der Untis-Mobile-API.
+
+    Format ist „2026-05-28T11:10Z" (Sekunden weggelassen, Z für UTC).
+    Wir liefern eine timezone-aware UTC-Datetime; HA konvertiert das in
+    die Hass-eigene Zeitzone, wenn nötig.
     """
-    d = period.get("date") or period.get(f"{which}Date")
-    t = period.get(f"{which}Time")
-    if d is None or t is None:
-        # Notnagel: jetzt
-        return datetime.now()
-    return parse_period_datetime(d, t)
+    if not value:
+        raise ValueError("leerer Zeitstempel")
+    # Sekunden ergänzen falls fehlend; Z → +00:00 für fromisoformat
+    v = value.replace("Z", "+00:00")
+    # „T11:10+00:00" hat keine Sekunden – das versteht fromisoformat ab 3.11
+    try:
+        return datetime.fromisoformat(v)
+    except ValueError:
+        # Notnagel: Sekunden einfügen
+        if "T" in v and v.count(":") == 2 + (1 if "+" in v else 0):
+            # bereits HH:MM:SS – kein Eingriff nötig
+            raise
+        # erwartet: YYYY-MM-DDTHH:MM[+/-...]
+        date_part, _, tail = v.partition("T")
+        time_part, _, tz_part = tail.partition("+") if "+" in tail else tail.partition("-")
+        sign = "+" if "+" in tail else "-"
+        return datetime.fromisoformat(f"{date_part}T{time_part}:00{sign}{tz_part}")
