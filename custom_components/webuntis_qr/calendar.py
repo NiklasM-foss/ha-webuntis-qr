@@ -79,8 +79,16 @@ class WebUntisCalendar(CoordinatorEntity[WebUntisCoordinator], CalendarEntity):
 
 
 def _to_event(period: dict[str, Any]) -> CalendarEvent:
-    """Mappt eine angereicherte Period auf ein CalendarEvent."""
-    summary = period["subject"] or period["subject_long"] or "Stunde"
+    """
+    Mappt eine angereicherte Period auf ein CalendarEvent.
+
+    Summary-Format: „<Fach> • <Raum>" – Raum direkt sichtbar im Kalender-Titel,
+    nicht nur im optionalen `location`-Feld (das viele HA-Calendar-Cards
+    nicht anzeigen).
+    """
+    subject = period["subject"] or period["subject_long"] or "Stunde"
+    room = period["room"]
+    summary = f"{subject} • {room}" if room else subject
     if period["is_cancelled"]:
         summary = f"[entfällt] {summary}"
 
@@ -89,11 +97,13 @@ def _to_event(period: dict[str, Any]) -> CalendarEvent:
         description_parts.append(f"Lehrer: {period['teacher']}")
     if period["subject_long"] and period["subject_long"] != period["subject"]:
         description_parts.append(f"Fach: {period['subject_long']}")
+    if room:
+        description_parts.append(f"Raum: {room}")
 
     return CalendarEvent(
         start=period["start"],
         end=period["end"],
         summary=summary,
-        location=period["room"] or None,
+        location=room or None,
         description="\n".join(description_parts) or None,
     )

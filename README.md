@@ -110,6 +110,8 @@ action:
 
 ## Letzte Änderungen
 
+- 1.2.1 – Raum erscheint jetzt im Kalender-Titel (Format „Fach • Raum"),
+  zusätzlich weiterhin in `location` und Beschreibung.
 - 1.2.0 – Binary-Sensor „Änderungen seit letzter Aktualisierung" hinzugefügt
   (SHA-256-Fingerprint über Periods – wird für einen Refresh-Zyklus true
   wenn sich Stundenplan-Inhalte geändert haben, danach automatisch false).
