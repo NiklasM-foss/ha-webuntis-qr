@@ -28,7 +28,7 @@ custom_components/webuntis_qr/
 ├── const.py             # Konstanten (DOMAIN, Config-Keys)
 ├── coordinator.py       # DataUpdateCoordinator – Polling + Caching
 ├── manifest.json        # HA-Manifest
-├── sensor.py            # Sensoren: nächste/aktuelle Stunde, Stunden heute
+├── sensor.py            # Sensoren: nächste/aktuelle Stunde, Stunden heute, nächste Ferien
 ├── strings.json         # UI-Strings (Quelle für Übersetzungen)
 └── translations/
     ├── de.json
@@ -89,6 +89,10 @@ Pro Konto werden angelegt:
   (Attribute: Start, Ende, Raum, Lehrer, langer Fachname).
 - `sensor.<konto>_aktuelle_stunde` – Fach, das gerade läuft, sonst `frei`.
 - `sensor.<konto>_stunden_heute` – Anzahl heutiger Stunden (Ausfall exkl.).
+- `sensor.<konto>_naechste_ferien` – Tage bis zu den nächsten Ferien /
+  beweglichen Ferientagen (Quelle: `masterData.holidays`). Wert `0` während
+  laufender Ferien. Attribute: `name`, `long_name`, `start_date`, `end_date`,
+  `is_active`, `duration_days`.
 - `calendar.<konto>_stundenplan` – Stundenplan-Kalender für Lovelace.
 
 ## Beispiel-Automation
@@ -110,6 +114,10 @@ action:
 
 ## Letzte Änderungen
 
+- 1.4.0 – Neuer Sensor „Nächste Ferien" (`sensor.<konto>_naechste_ferien`):
+  Tage bis zu den nächsten Ferien/beweglichen Ferientagen aus
+  `masterData.holidays`. `0` während laufender Ferien; Name, Zeitraum und
+  Dauer als Attribute.
 - 1.3.1 – **Zeitzonen-Bug behoben**: WebUntis liefert in `startDateTime`/
   `endDateTime` die lokale Schul-Wandzeit, hängt aber fälschlich „Z" (UTC) an.
   Bisher wurde das als UTC interpretiert, wodurch Stunden in HA um den

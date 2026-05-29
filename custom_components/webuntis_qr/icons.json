@@ -3,7 +3,8 @@
     "sensor": {
       "next_lesson": { "default": "mdi:school" },
       "current_lesson": { "default": "mdi:clock-outline" },
-      "lessons_today": { "default": "mdi:calendar-today" }
+      "lessons_today": { "default": "mdi:calendar-today" },
+      "next_holiday": { "default": "mdi:beach" }
     },
     "binary_sensor": {
       "changed_since_last": {

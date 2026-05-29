@@ -84,6 +84,8 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
 
             enriched = _enrich_periods(periods, self._user_data)
+            # Ferien/bewegliche Ferientage aus den masterData ableiten
+            holidays = _parse_holidays(self._user_data)
 
             # Fingerprint berechnen und mit dem letzten vergleichen, um zu
             # erkennen ob sich der Stundenplan zwischen zwei Refreshes
@@ -98,6 +100,7 @@ class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             return {
                 "user_data": self._user_data,
                 "periods": enriched,
+                "holidays": holidays,
                 "changed_since_last": changed,
                 "fingerprint": fingerprint,
             }
@@ -165,6 +168,39 @@ def _enrich_periods(
 
     enriched.sort(key=lambda x: x["start"])
     return enriched
+
+
+def _parse_holidays(user_data: dict[str, Any]) -> list[dict[str, Any]]:
+    """
+    Liest die Ferien-/Feiertagsliste aus den masterData.
+
+    WebUntis liefert unter `masterData.holidays` sowohl mehrtägige Schulferien
+    als auch einzelne bewegliche Ferientage. Format pro Eintrag:
+      - name / longName: z.B. "Pfingsten" / "Pfingstferien"
+      - startDate / endDate: YYYYMMDD als Integer; endDate ist INKLUSIVE
+        (letzter freier Tag).
+
+    Rückgabe: nach Startdatum sortierte Liste mit `date`-Objekten.
+    """
+    master = user_data.get("masterData", {})
+    result: list[dict[str, Any]] = []
+    for h in master.get("holidays", []) or []:
+        try:
+            start = datetime.strptime(str(h["startDate"]), "%Y%m%d").date()
+            end = datetime.strptime(str(h["endDate"]), "%Y%m%d").date()
+        except (KeyError, TypeError, ValueError):
+            # Eintrag mit fehlendem/kaputtem Datum überspringen statt Crash
+            continue
+        result.append(
+            {
+                "name": h.get("name", ""),
+                "long_name": h.get("longName", h.get("name", "")),
+                "start": start,
+                "end": end,
+            }
+        )
+    result.sort(key=lambda x: x["start"])
+    return result
 
 
 def _periods_fingerprint(periods: list[dict[str, Any]]) -> str:

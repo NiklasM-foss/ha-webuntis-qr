@@ -1,6 +1,6 @@
 """
-Sensor-Plattform: liefert „nächste Stunde", „aktuelle Stunde" und
-„Stunden heute" als Entities.
+Sensor-Plattform: liefert „nächste Stunde", „aktuelle Stunde",
+„Stunden heute" und „nächste Ferien" als Entities.
 
 Jeder Sensor ist eine dünne Sicht auf die im Coordinator gecachten Periods.
 """
@@ -33,6 +33,7 @@ async def async_setup_entry(
             NextLessonSensor(coordinator, entry),
             CurrentLessonSensor(coordinator, entry),
             LessonsTodaySensor(coordinator, entry),
+            NextHolidaySensor(coordinator, entry),
         ]
     )
 
@@ -175,4 +176,56 @@ class LessonsTodaySensor(_Base):
             "last_end": todays[-1]["end"].isoformat(),
             "cancelled_count": sum(1 for p in todays if p["is_cancelled"]),
             "subjects": [p["subject"] for p in todays],
+        }
+
+
+class NextHolidaySensor(_Base):
+    """
+    Tage bis zu den nächsten Ferien / dem nächsten beweglichen Ferientag.
+
+    Datenquelle ist `masterData.holidays` (Schulferien + bewegliche
+    Ferientage). Zustand ist die Anzahl Tage bis zum Ferienbeginn; laufen
+    die Ferien gerade, ist der Wert 0 (Attribut `is_active` = true).
+    """
+
+    _attr_translation_key = "next_holiday"
+    _attr_native_unit_of_measurement = "Tage"
+
+    def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
+        super().__init__(coordinator, entry, "next_holiday")
+        self._attr_name = "Nächste Ferien"
+
+    def _holidays(self) -> list[dict[str, Any]]:
+        return (self.coordinator.data or {}).get("holidays", []) or []
+
+    def _next(self) -> dict[str, Any] | None:
+        """Erste Ferienperiode, die heute noch nicht vorbei ist (end >= heute)."""
+        today = dt_util.now().date()
+        # Liste ist nach Startdatum sortiert → erste passende ist die nächste
+        return next((h for h in self._holidays() if h["end"] >= today), None)
+
+    @property
+    def native_value(self) -> int | None:
+        nxt = self._next()
+        if not nxt:
+            return None
+        today = dt_util.now().date()
+        # Laufende Ferien → 0, sonst Tage bis zum Beginn
+        return max(0, (nxt["start"] - today).days)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        nxt = self._next()
+        if not nxt:
+            return None
+        today = dt_util.now().date()
+        return {
+            "name": nxt["name"],
+            "long_name": nxt["long_name"],
+            "start_date": nxt["start"].isoformat(),
+            "end_date": nxt["end"].isoformat(),
+            # Ferien laufen bereits (heute liegt im Zeitraum)
+            "is_active": nxt["start"] <= today <= nxt["end"],
+            # Gesamtdauer inkl. erstem und letztem Tag
+            "duration_days": (nxt["end"] - nxt["start"]).days + 1,
         }

@@ -51,7 +51,8 @@
     "sensor": {
       "next_lesson": { "name": "Nächste Stunde" },
       "current_lesson": { "name": "Aktuelle Stunde" },
-      "lessons_today": { "name": "Stunden heute" }
+      "lessons_today": { "name": "Stunden heute" },
+      "next_holiday": { "name": "Nächste Ferien" }
     }
   }
 }
