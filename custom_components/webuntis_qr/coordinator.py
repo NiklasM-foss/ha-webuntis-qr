@@ -14,6 +14,7 @@ from typing import Any
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import WebUntisAuthError, WebUntisQRClient
 from .const import (
@@ -196,23 +197,32 @@ def _parse_iso(value: str) -> datetime:
     Parst die ISO-Zeitstempel der Untis-Mobile-API.
 
     Format ist „2026-05-28T11:10Z" (Sekunden weggelassen, Z für UTC).
-    Wir liefern eine timezone-aware UTC-Datetime; HA konvertiert das in
-    die Hass-eigene Zeitzone, wenn nötig.
+
+    ACHTUNG – WebUntis-Eigenheit: Das „Z" (bzw. ein angehängter Offset) ist
+    FALSCH. Die Mobile-API liefert die LOKALE Wandzeit der Schule, kennzeichnet
+    sie aber fälschlich als UTC. Würden wir „07:40Z" als UTC interpretieren,
+    erschiene die Stunde in HA als 09:40 (CEST = UTC+2). Deshalb: die
+    Zeitzonen-Angabe aus dem String verwerfen und die Wandzeit als
+    HA-Lokalzeit (dt_util.DEFAULT_TIME_ZONE) interpretieren.
     """
     if not value:
         raise ValueError("leerer Zeitstempel")
-    # Sekunden ergänzen falls fehlend; Z → +00:00 für fromisoformat
-    v = value.replace("Z", "+00:00")
-    # „T11:10+00:00" hat keine Sekunden – das versteht fromisoformat ab 3.11
+    # Zeitzonen-Kennung verwerfen – wir behandeln den Wert als reine Wandzeit.
+    v = value.replace("Z", "")
+    if "T" in v:
+        date_part, _, time_part = v.partition("T")
+        # evtl. angehängten +/-HH:MM-Offset am Zeitteil abschneiden
+        for sep in ("+", "-"):
+            if sep in time_part:
+                time_part = time_part.split(sep, 1)[0]
+                break
+        v = f"{date_part}T{time_part}"
+    # naive Datetime parsen (Sekunden sind ab Python 3.11 optional)
     try:
-        return datetime.fromisoformat(v)
+        naive = datetime.fromisoformat(v)
     except ValueError:
-        # Notnagel: Sekunden einfügen
-        if "T" in v and v.count(":") == 2 + (1 if "+" in v else 0):
-            # bereits HH:MM:SS – kein Eingriff nötig
-            raise
-        # erwartet: YYYY-MM-DDTHH:MM[+/-...]
-        date_part, _, tail = v.partition("T")
-        time_part, _, tz_part = tail.partition("+") if "+" in tail else tail.partition("-")
-        sign = "+" if "+" in tail else "-"
-        return datetime.fromisoformat(f"{date_part}T{time_part}:00{sign}{tz_part}")
+        # Notnagel: fehlende Sekunden ergänzen
+        naive = datetime.fromisoformat(f"{v}:00")
+    # Wandzeit als HA-Lokalzeit kennzeichnen; downstream wird gegen
+    # aware-UTC-„now()" verglichen – aware/aware-Vergleiche sind korrekt.
+    return naive.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)

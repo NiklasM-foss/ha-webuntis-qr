@@ -53,7 +53,7 @@ class WebUntisCalendar(CoordinatorEntity[WebUntisCoordinator], CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Nächstes anstehendes Event – wird in der HA-UI hervorgehoben."""
-        # Periods sind timezone-aware (UTC); now() entsprechend aware machen
+        # Periods sind timezone-aware (HA-Lokalzeit); now() ebenfalls aware
         now = datetime.now(timezone.utc)
         upcoming = next(
             (p for p in self._periods() if p["end"] > now and not p["is_cancelled"]),

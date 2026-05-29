@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import WebUntisCoordinator
@@ -69,7 +70,7 @@ class NextLessonSensor(_Base):
 
     @property
     def native_value(self) -> str | None:
-        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        # Periods sind timezone-aware (HA-Lokalzeit); now() ebenfalls aware
         now = datetime.now(timezone.utc)
         # Erste Period, die in der Zukunft liegt und nicht ausgefallen ist
         upcoming = next(
@@ -82,7 +83,7 @@ class NextLessonSensor(_Base):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        # Periods sind timezone-aware (HA-Lokalzeit); now() ebenfalls aware
         now = datetime.now(timezone.utc)
         upcoming = next(
             (p for p in self._periods() if p["end"] > now and not p["is_cancelled"]),
@@ -110,7 +111,7 @@ class CurrentLessonSensor(_Base):
 
     @property
     def native_value(self) -> str:
-        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        # Periods sind timezone-aware (HA-Lokalzeit); now() ebenfalls aware
         now = datetime.now(timezone.utc)
         current = next(
             (p for p in self._periods() if p["start"] <= now < p["end"]),
@@ -124,7 +125,7 @@ class CurrentLessonSensor(_Base):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        # Periods sind timezone-aware (UTC); now() entsprechend aware
+        # Periods sind timezone-aware (HA-Lokalzeit); now() ebenfalls aware
         now = datetime.now(timezone.utc)
         current = next(
             (p for p in self._periods() if p["start"] <= now < p["end"]),
@@ -152,19 +153,21 @@ class LessonsTodaySensor(_Base):
 
     @property
     def native_value(self) -> int:
-        # date() in lokaler Zeit – Periods sind UTC, also vorher konvertieren
-        today = datetime.now().astimezone().date()
+        # „heute" in HA-Lokalzeit bestimmen; Periods sind bereits HA-lokal-aware
+        today = dt_util.now().date()
         return sum(
             1
             for p in self._periods()
-            if p["start"].astimezone().date() == today and not p["is_cancelled"]
+            if dt_util.as_local(p["start"]).date() == today and not p["is_cancelled"]
         )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        # date() in lokaler Zeit – Periods sind UTC, also vorher konvertieren
-        today = datetime.now().astimezone().date()
-        todays = [p for p in self._periods() if p["start"].astimezone().date() == today]
+        # „heute" in HA-Lokalzeit bestimmen; Periods sind bereits HA-lokal-aware
+        today = dt_util.now().date()
+        todays = [
+            p for p in self._periods() if dt_util.as_local(p["start"]).date() == today
+        ]
         if not todays:
             return None
         return {

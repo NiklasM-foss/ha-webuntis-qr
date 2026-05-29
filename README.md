@@ -110,6 +110,11 @@ action:
 
 ## Letzte Änderungen
 
+- 1.3.1 – **Zeitzonen-Bug behoben**: WebUntis liefert in `startDateTime`/
+  `endDateTime` die lokale Schul-Wandzeit, hängt aber fälschlich „Z" (UTC) an.
+  Bisher wurde das als UTC interpretiert, wodurch Stunden in HA um den
+  UTC-Offset verschoben erschienen (z. B. 07:40 → 09:40 in CEST). Jetzt wird
+  die Wandzeit als HA-Lokalzeit interpretiert.
 - 1.3.0 – Eigenes Projekt-Icon (`brand/icon.svg`, Doktorhut + QR-Marker) +
   `icons.json` für Entity-Icons (HA-Translation-Mechanismus, dynamisches
   Glocken-Icon beim Änderungs-Sensor on/off). Brands-Repo-Anleitung in
