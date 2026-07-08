@@ -1,13 +1,17 @@
 {
   "domain": "webuntis_qr",
   "name": "WebUntis (QR-Login)",
-  "version": "1.4.0",
-  "documentation": "https://github.com/NiklasM-foss/ha-webuntis-qr",
-  "issue_tracker": "https://github.com/NiklasM-foss/ha-webuntis-qr/issues",
-  "codeowners": ["@NiklasM-foss"],
+  "codeowners": [
+    "@NiklasM-foss"
+  ],
   "config_flow": true,
-  "iot_class": "cloud_polling",
-  "requirements": ["pyotp>=2.9.0"],
+  "dependencies": [],
+  "documentation": "https://github.com/NiklasM-foss/ha-webuntis-qr",
   "integration_type": "service",
-  "dependencies": []
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/NiklasM-foss/ha-webuntis-qr/issues",
+  "requirements": [
+    "pyotp>=2.9.0"
+  ],
+  "version": "1.4.0"
 }
