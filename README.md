@@ -2,17 +2,17 @@
 
 HACS-kompatible Custom-Integration, die sich per **QR-Code aus der Untis-App** bei
 WebUntis anmeldet und den Stundenplan als Sensoren + Kalender in Home Assistant
-verfügbar macht – ohne Username/Passwort.
+verfügbar macht – ohne WebUntis-Passwort.
 
 ## Status
 
-Version 1.0.0 – funktionsfähig, ohne externe `python-webuntis`-Dependency
+Version 1.4.1 – funktionsfähig, ohne externe `python-webuntis`-Dependency
 (eigener async JSON-RPC-Client + TOTP). Verschiedene Schul-Server können
 leicht unterschiedliche Felder liefern; bei Problemen Issue öffnen.
 
 ## Stack
 
-- Home Assistant ≥ 2024.4
+- Home Assistant ≥ 2026.3
 - Python (asyncio + aiohttp)
 - pyotp für TOTP-Generierung
 - HACS (Repo-Typ: Integration)
@@ -23,13 +23,16 @@ leicht unterschiedliche Felder liefern; bei Problemen Issue öffnen.
 custom_components/webuntis_qr/
 ├── __init__.py          # Setup-Einstiegspunkt, ConfigEntry-Loader
 ├── api.py               # JSON-RPC-Client mit TOTP-Auth + QR-Parser
+├── binary_sensor.py     # Binary-Sensor: Änderungen seit letzter Aktualisierung
 ├── calendar.py          # Calendar-Plattform (Stundenplan als HA-Kalender)
 ├── config_flow.py       # UI-Anmeldedialog (QR / manuell)
 ├── const.py             # Konstanten (DOMAIN, Config-Keys)
 ├── coordinator.py       # DataUpdateCoordinator – Polling + Caching
+├── icons.json           # Entity-Icons (HA-Translation-Icon-Mechanismus)
 ├── manifest.json        # HA-Manifest
 ├── sensor.py            # Sensoren: nächste/aktuelle Stunde, Stunden heute, nächste Ferien
 ├── strings.json         # UI-Strings (Quelle für Übersetzungen)
+├── brand/               # Integration-Icon (icon.png, icon@2x.png, icon.svg)
 └── translations/
     ├── de.json
     └── en.json
@@ -50,7 +53,10 @@ untis://setschool?url=<server>&school=<schulname>&user=<username>&key=<base32-se
 - Beim Login wird aus `key` der aktuelle 6-stellige Code erzeugt und im
   `auth`-Block des JSON-RPC-Aufrufs an `https://<server>/WebUntis/jsonrpc_intern.do`
   mitgeschickt – exakt wie es die offizielle Mobile-App tut.
-- HA speichert das Secret im ConfigEntry; danach werden keine Passwörter benötigt.
+- HA speichert Benutzername und Secret im ConfigEntry. Ein WebUntis-Passwort
+  wird nie abgefragt, das dauerhaft gültige TOTP-Secret ist aber wie ein
+  Zugangsdatum zu behandeln: Wer es hat, kommt an das Untis-Konto. Wird der
+  Zugang in der Untis-App widerrufen, ist auch dieses Secret wertlos.
 
 ## Installation
 
@@ -114,6 +120,12 @@ action:
 
 ## Letzte Änderungen
 
+- 1.4.1 – Mindestversion auf Home Assistant 2026.3 angehoben, weil die
+  mitgelieferten Brand-Icons (`custom_components/webuntis_qr/brand/`) erst ab
+  dieser Version gelesen werden. Die veraltete Anleitung zum Brands-Repo
+  entfernt – seit 2026.3 nimmt `home-assistant/brands` keine Custom-Integrationen
+  mehr auf, die Icons im Repo sind der vorgesehene Weg. Doku korrigiert:
+  Versionsangabe, Verzeichnisbaum und die Aussage zu gespeicherten Zugangsdaten.
 - 1.4.0 – Neuer Sensor „Nächste Ferien" (`sensor.<konto>_naechste_ferien`):
   Tage bis zu den nächsten Ferien/beweglichen Ferientagen aus
   `masterData.holidays`. `0` während laufender Ferien; Name, Zeitraum und
@@ -123,10 +135,9 @@ action:
   Bisher wurde das als UTC interpretiert, wodurch Stunden in HA um den
   UTC-Offset verschoben erschienen (z. B. 07:40 → 09:40 in CEST). Jetzt wird
   die Wandzeit als HA-Lokalzeit interpretiert.
-- 1.3.0 – Eigenes Projekt-Icon (`brand/icon.svg`, Doktorhut + QR-Marker) +
-  `icons.json` für Entity-Icons (HA-Translation-Mechanismus, dynamisches
-  Glocken-Icon beim Änderungs-Sensor on/off). Brands-Repo-Anleitung in
-  `brand/README.md`.
+- 1.3.0 – Eigenes Projekt-Icon (Doktorhut + QR-Marker) + `icons.json` für
+  Entity-Icons (HA-Translation-Mechanismus, dynamisches Glocken-Icon beim
+  Änderungs-Sensor on/off).
 - 1.2.1 – Raum erscheint jetzt im Kalender-Titel (Format „Fach • Raum"),
   zusätzlich weiterhin in `location` und Beschreibung.
 - 1.2.0 – Binary-Sensor „Änderungen seit letzter Aktualisierung" hinzugefügt
