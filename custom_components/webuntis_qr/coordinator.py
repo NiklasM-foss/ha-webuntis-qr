@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 class WebUntisCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """
-    Holt einmal pro Polling-Intervall den Stundenplan für heute + 7 Tage
+    Holt einmal pro Polling-Intervall den Stundenplan für heute + Lookahead
     und stellt das masterData-Mapping (Fächer/Räume/Lehrer-IDs → Namen) bereit.
     """
 

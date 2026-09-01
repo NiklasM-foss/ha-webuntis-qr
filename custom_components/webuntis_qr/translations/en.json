@@ -49,10 +49,28 @@
   },
   "entity": {
     "sensor": {
-      "next_lesson": { "name": "Next lesson" },
-      "current_lesson": { "name": "Current lesson" },
-      "lessons_today": { "name": "Lessons today" },
-      "next_holiday": { "name": "Next holiday" }
+      "next_lesson": {
+        "name": "Next lesson"
+      },
+      "current_lesson": {
+        "name": "Current lesson"
+      },
+      "lessons_today": {
+        "name": "Lessons today"
+      },
+      "next_holiday": {
+        "name": "Next holiday"
+      }
+    },
+    "binary_sensor": {
+      "changed_since_last": {
+        "name": "Changes since last update"
+      }
+    },
+    "calendar": {
+      "timetable": {
+        "name": "Timetable"
+      }
     }
   }
 }

@@ -26,7 +26,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Erzeugt die drei Sensor-Entities für diesen ConfigEntry."""
+    """Erzeugt die vier Sensor-Entities für diesen ConfigEntry."""
     coordinator: WebUntisCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [
@@ -67,7 +67,6 @@ class NextLessonSensor(_Base):
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "next_lesson")
-        self._attr_name = "Nächste Stunde"
 
     @property
     def native_value(self) -> str | None:
@@ -108,7 +107,6 @@ class CurrentLessonSensor(_Base):
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "current_lesson")
-        self._attr_name = "Aktuelle Stunde"
 
     @property
     def native_value(self) -> str:
@@ -150,7 +148,6 @@ class LessonsTodaySensor(_Base):
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "lessons_today")
-        self._attr_name = "Stunden heute"
 
     @property
     def native_value(self) -> int:
@@ -193,7 +190,6 @@ class NextHolidaySensor(_Base):
 
     def __init__(self, coordinator: WebUntisCoordinator, entry: ConfigEntry) -> None:
         super().__init__(coordinator, entry, "next_holiday")
-        self._attr_name = "Nächste Ferien"
 
     def _holidays(self) -> list[dict[str, Any]]:
         return (self.coordinator.data or {}).get("holidays", []) or []

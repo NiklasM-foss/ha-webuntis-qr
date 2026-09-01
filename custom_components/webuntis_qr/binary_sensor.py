@@ -47,7 +47,6 @@ class ChangedSinceLastSensor(
         super().__init__(coordinator)
         self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_changed_since_last"
-        self._attr_name = "Änderungen seit letzter Aktualisierung"
         self._attr_device_info = {
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": entry.title,

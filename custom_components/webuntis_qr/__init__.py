@@ -3,7 +3,7 @@ Setup-Einstiegspunkt der WebUntis-QR-Integration.
 
 Wird von Home Assistant aufgerufen, sobald ein ConfigEntry geladen wird.
 Hier bauen wir den API-Client + Coordinator und reichen sie an die
-Plattform-Module (sensor, calendar) weiter.
+Plattform-Module (sensor, binary_sensor, calendar) weiter.
 """
 
 from __future__ import annotations
